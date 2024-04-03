@@ -56,6 +56,9 @@
 </head>
 
 <body>
+  <div class="loading-container hidden">
+    <div class="loading"></div>
+  </div>
   <div class="container">
     <div class="info">
       <p>スクエア入退室記録</p>
@@ -96,6 +99,10 @@
       const stored = async () => {
         if (!verifyId(_studentNo.value)) return;
 
+        document
+          .querySelector("div.loading-container")
+          .classList.remove("hidden");
+          
         const query = new URLSearchParams({
           studentNo: _studentNo.value
         });
@@ -104,7 +111,6 @@
         const res = await fetch(`${GAS_URL}?${query}`);
         const action = await res.text();
 
-        document.getElementById("mes").textContent = action == "enter" ? "入室を記録しています..." : "退室手続きを開始します"
         await setStudentNo(_studentNo.value);
         const studentNo = await getStudentNo();
 
@@ -117,15 +123,16 @@
               time: detailDateFormatter.format(new Date()),
             };
 
-            const res = await fetch(GAS_URL, {
+            fetch(GAS_URL, {
               method: "post",
               body: JSON.stringify(data),
             });
-            window.location = "./enter/submitted.html";
+            
+            setTimeout(()=>{window.location = "./enter/submitted.html"}, 600)
             break;
 
           case "leave":
-            setTimeout(()=>{window.location = "./leave/used-equipments.html"}, 1000)
+            setTimeout(()=>{window.location = "./leave/used-equipments.html"}, 600)
             break;
         }
       };
