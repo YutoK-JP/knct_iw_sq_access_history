@@ -1,89 +1,142 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>スクエア入退室記録</title>
-    <link rel="stylesheet" href="./reset.min.css" />
-    <link rel="stylesheet" href="./common.css" />
-    <style>
-      .container {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(2, 1fr);
-        grid-column-gap: 0px;
-        grid-row-gap: 0px;
-        min-width: 100%;
-        min-height: 100%;
-        padding: 100px;
-        column-gap: 100px;
-      }
 
-      .info {
-        grid-area: 1 / 1 / 2 / 3;
-        font-size: 100px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>スクエア入退室記録</title>
+  <link rel="stylesheet" href="./reset.min.css" />
+  <link rel="stylesheet" href="./common.css" />
+  <style>
+    .container {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(3, 1fr);
+      grid-column-gap: 0px;
+      grid-row-gap: 0px;
+      min-width: 100%;
+      min-height: 100%;
+      align-items: center;
+      justify-content: center;
+      padding: 120px;
+      column-gap: 100px;
+      text-align: center;
+      font-size: 60px;
+      user-select: none;
+    }
 
-      .enter {
-        grid-area: 2 / 1 / 3 / 2;
-      }
+    .info {
+      grid-area: 1 / 1 / 2 / 3;
+      font-size: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
 
-      .leave {
-        grid-area: 2 / 2 / 3 / 3;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="info">
-        <p>スクエア入退室記録</p>
-        <p id="time"></p>
-      </div>
-      <a
-        href="./enter/index.html"
-        class="button border-3 text-lg text-black center enter"
-      >
-        入室
-      </a>
-      <a
-        href="./leave/index.html"
-        class="button border-3 text-lg text-black center leave"
-      >
-        退室
-      </a>
+    .mes {
+      grid-area: 2 / 1 / 3 / 3;
+      font-size: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      margin: 20px;
+    }
+
+    .input {
+      grid-area: 3 / 1 / 4 / 3;
+    }
+
+    #student-no {
+      padding: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="info">
+      <p>スクエア入退室記録</p>
+      <p id="time"></p>
     </div>
-    <script src="./kvs-indexeddb-2.1.1.js"></script>
-    <script src="./utils.js"></script>
-    <script src="./storage.js"></script>
-    <script>
-      (async () => {
-        await initStorage();
-        await deleteStudentNo();
+    <div class="mes">
+      <p id="mes">学生証を読み込んでください</p>
+    </div>
+    <div class="input">
+      <input type="text" id="student-no" autofocus />
+      <button id="clear" class="button text-black">削除</button>
+    </div>
+  </div>
 
-        // const isFirst =
-        //   (await getLastRun()) !== simpleDateFormatter.format(new Date());
+  <script src="./kvs-indexeddb-2.1.1.js"></script>
+  <script src="./utils.js"></script>
+  <script src="./storage.js"></script>
+  <script src="./settings.js"></script>
+  <script>
+    (async () => {
+      await initStorage();
+      await deleteStudentNo();
 
-        // if (isFirst) {
-        //   await deleteStudentsCount();
-        //   await updateLastRun();
-        // }
+      const _studentNo = document.getElementById("student-no");
+      const nextButton = document.getElementById("next-button");
 
-        // const currentStudentsCount = await getStudentsCount();
-        // document.getElementById("current-students-count").textContent =
-        //   currentStudentsCount;
-        const updateClock = () => {
-          const now = simpleTimeFormatter.format(Date.now());
-          document.getElementById("time").textContent = now;
-        };
-        updateClock();
+      const clear = document.getElementById("clear");
 
-        setInterval(updateClock, 1000);
-      })();
-    </script>
-  </body>
+      clear.addEventListener("click", () => {
+        _studentNo.value = "";
+        _studentNo.focus();
+      });
+
+      document.body.addEventListener("click", () => {
+        _studentNo.focus();
+      });
+
+      const stored = async () => {
+        if (!verifyId(_studentNo.value)) return;
+
+        const query = new URLSearchParams({
+          studentNo: _studentNo.value
+        });
+        document.getElementById("mes").textContent = "問い合わせ中です..."
+
+        const res = await fetch(`${GAS_URL}?${query}`);
+        const action = await res.text();
+
+        document.getElementById("mes").textContent = action == "enter" ? "入室を記録しています..." : "退室手続きを開始します"
+        await setStudentNo(_studentNo.value);
+        const studentNo = await getStudentNo();
+
+        switch (action) {
+          case "enter":
+            const data = {
+              type: "enter",
+              studentNo,
+              numberOfPeople: 1,
+              time: detailDateFormatter.format(new Date()),
+            };
+
+            const res = await fetch(GAS_URL, {
+              method: "post",
+              body: JSON.stringify(data),
+            });
+            window.location = "./enter/submitted.html";
+            break;
+
+          case "leave":
+            setTimeout(()=>{window.location = "./leave/used-equipments.html"}, 1000)
+            break;
+        }
+      };
+
+      _studentNo.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") {
+          stored();
+        }
+      });
+    })();
+  </script>
+</body>
+
 </html>
