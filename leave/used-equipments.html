@@ -29,11 +29,11 @@
       .sub-title {
         font-size: 40px;
       }
-
+      
       .equipments {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(5, 1fr);
+        grid-template-rows: repeat(4, 1fr);
         grid-column-gap: 0px;
         grid-row-gap: 20px;
         grid-auto-flow: column;
@@ -89,14 +89,6 @@
           設備08:
           <input type="text" id="equipment8" />
         </div>
-        <div>
-          設備09:
-          <input type="text" id="equipment9" />
-        </div>
-        <div>
-          設備10:
-          <input type="text" id="equipment10" />
-        </div>
       </div>
       <div class="buttons">
         <a href="../index.html" class="button text-md text-black"
@@ -148,20 +140,14 @@
         document.getElementById("equipment7").addEventListener("keyup", (e) => {
           nextInput(e, 8);
         });
-        document.getElementById("equipment8").addEventListener("keyup", (e) => {
-          nextInput(e, 9);
-        });
-        document.getElementById("equipment9").addEventListener("keyup", (e) => {
-          nextInput(e, 10);
-        });
         document
-          .getElementById("equipment10")
+          .getElementById("equipment8")
           .addEventListener("keyup", (e) => {
             // nextButton.click();
           });
 
         document.body.addEventListener("click", () => {
-          for (let i = 1; i <= 10; i++) {
+          for (let i = 1; i <= 8; i++) {
             const el = document.getElementById(`equipment${i}`);
             if (el.value === "") {
               el.focus();
@@ -173,7 +159,7 @@
         document
           .getElementById("clear")
           .addEventListener("click", async (e) => {
-            for (let i = 1; i <= 10; i++) {
+            for (let i = 1; i <= 8; i++) {
               document.getElementById(`equipment${i}`).value = "";
             }
           });
@@ -186,7 +172,7 @@
               .classList.remove("hidden");
 
             const s = new Set();
-            for (let i = 1; i <= 10; i++) {
+            for (let i = 1; i <= 8; i++) {
               let { value } = document.getElementById(`equipment${i}`);
               value = value.trim();
               if (!value || value == "") continue;
@@ -202,12 +188,10 @@
 
             console.log(data);
 
-            const res = await fetch(GAS_URL, {
+            fetch(GAS_URL, {
               method: "post",
               body: JSON.stringify(data),
-            });
-
-            console.log(await res.json());
+            }).then(async res=>console.log(await res.json()));
 
             window.location = "./submitted.html";
           });

@@ -82,43 +82,45 @@
       await initStorage();
       await deleteStudentNo();
 
-      const _studentNo = document.getElementById("student-no");
+      const studentNo = document.getElementById("student-no");
       const nextButton = document.getElementById("next-button");
 
       const clear = document.getElementById("clear");
 
       clear.addEventListener("click", () => {
-        _studentNo.value = "";
-        _studentNo.focus();
+        studentNo.value = "";
+        studentNo.focus();
       });
 
       document.body.addEventListener("click", () => {
-        _studentNo.focus();
+        studentNo.focus();
       });
 
       const stored = async () => {
-        if (!verifyId(_studentNo.value)) return;
+        const _studentNo = regulizeId(studentNo.value);
+        studentNo.value = _studentNo
+        if (!verifyId(_studentNo)) return;
 
         document
           .querySelector("div.loading-container")
           .classList.remove("hidden");
-          
+
         const query = new URLSearchParams({
-          studentNo: _studentNo.value
+          studentNo: _studentNo
         });
         document.getElementById("mes").textContent = "問い合わせ中です..."
 
+        console.log(`${GAS_URL}?${query}`);
         const res = await fetch(`${GAS_URL}?${query}`);
         const action = await res.text();
 
-        await setStudentNo(_studentNo.value);
-        const studentNo = await getStudentNo();
+        await setStudentNo(_studentNo);
 
         switch (action) {
           case "enter":
             const data = {
               type: "enter",
-              studentNo,
+              studentNo: _studentNo,
               numberOfPeople: 1,
               time: detailDateFormatter.format(new Date()),
             };
@@ -127,17 +129,17 @@
               method: "post",
               body: JSON.stringify(data),
             });
-            
-            setTimeout(()=>{window.location = "./enter/submitted.html"}, 600)
+
+            setTimeout(() => { window.location = "./enter/submitted.html" }, 600)
             break;
 
           case "leave":
-            setTimeout(()=>{window.location = "./leave/used-equipments.html"}, 600)
+            setTimeout(() => { window.location = "./leave/used-equipments.html" }, 600)
             break;
         }
       };
 
-      _studentNo.addEventListener("keyup", (e) => {
+      studentNo.addEventListener("keyup", (e) => {
         if (e.key === "Enter") {
           stored();
         }

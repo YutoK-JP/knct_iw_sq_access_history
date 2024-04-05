@@ -1,3 +1,12 @@
+const regulizeId = (id) => {
+  console.log(typeof(id))
+  if (id.startsWith("S")){
+    id = id.replace("S", "8");
+  }
+  id = id.replaceAll(" ", "");
+  return id;
+}
+
 const verifyId = (id) => {
   // バーコード
   // 学生証: 学生番号7桁 (1|2|3|4|8 年度(20\d{2}) 連番(\d{2})) + 0
